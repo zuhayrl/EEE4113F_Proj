@@ -33,3 +33,13 @@ Non-Contact Infrared Thermometers Can
 Accurately Measure Amphibian Body
 Temperatures
 https://researchonline.jcu.edu.au/2833/1/2833_Rowley&_Alford_2007.pdf
+
+Assessment of Non-Contact Infrared Thermometer Measurement Sites in Birds
+https://www.tandfonline.com/doi/full/10.1080/10888705.2019.1664303
+
+Applications of thermal imaging in avian science
+includes infra red images of birds
+https://onlinelibrary.wiley.com/doi/full/10.1111/ibi.12010
+
+Body Surface Temperatures and Thermoregulation in the Black-Capped Chickadee (Parus atricapillus)
+https://www-jstor-org.ezproxy.uct.ac.za/stable/30155793?seq=1

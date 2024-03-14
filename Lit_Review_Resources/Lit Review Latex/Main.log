@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021) (preloaded format=pdflatex 2021.6.20)  14 MAR 2024 11:47
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021) (preloaded format=pdflatex 2021.6.20)  14 MAR 2024 12:18
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -27,8 +27,7 @@ File: size11.clo 2020/04/10 v1.4m Standard LaTeX file (size option)
 \belowcaptionskip=\skip48
 \bibindent=\dimen138
 )
-(/Users/cameronclark/Documents/UCT/EEE4113F/EEE4113F_Proj/Lit_Review_Resources/
-Lit Review Latex/Style/ChapterStyle.tex
+(./Style/ChapterStyle.tex
 (/usr/local/texlive/2021/texmf-dist/tex/latex/geometry/geometry.sty
 Package: geometry 2020/01/02 v5.9 Page Geometry
 
@@ -1000,8 +999,7 @@ Package: varwidth 2009/03/30 ver 0.92;  Variable-width minipages
 Package: filemod-expmin 2011/09/19 v1.2 Get and compare file modification times
  (expandable; minimal)
 ))
-(/Users/cameronclark/Documents/UCT/EEE4113F/EEE4113F_Proj/Lit_Review_Resources/
-Lit Review Latex/FrontMatter/Glossary.tex)
+(./FrontMatter/Glossary.tex)
 (/Users/cameronclark/Documents/UCT/EEE4113F/EEE4113F_Proj/Lit_Review_Resources/
 Lit Review Latex/Main.aux)
 \openout1 = `Main.aux'.
@@ -1213,16 +1211,13 @@ Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 
-(/Users/cameronclark/Documents/UCT/EEE4113F/EEE4113F_Proj/Lit_Review_Resources/
-Lit Review Latex/FrontMatter/Title.tex
-<FrontMatter/UCT_logo.png, id=48, 1554.80875pt x 1578.89874pt>
+(./FrontMatter/Title.tex
+<FrontMatter/UCT_logo.png, id=112, 1554.80875pt x 1578.89874pt>
 File: FrontMatter/UCT_logo.png Graphic file (type png)
 <use FrontMatter/UCT_logo.png>
 Package pdftex.def Info: FrontMatter/UCT_logo.png  used on input line 14.
 (pdftex.def)             Requested size: 193.47578pt x 196.47044pt.
-)
-(/Users/cameronclark/Documents/UCT/EEE4113F/EEE4113F_Proj/Lit_Review_Resources/
-Lit Review Latex/FrontMatter/Declaration.tex [1
+) (./FrontMatter/Declaration.tex [1
 
 {/usr/local/texlive/2021/texmf-var/fonts/map/pdftex/updmap/pdftex.map} </Users/
 cameronclark/Documents/UCT/EEE4113F/EEE4113F_Proj/Lit_Review_Resources/Lit Revi
@@ -1231,9 +1226,8 @@ ew Latex/FrontMatter/UCT_logo.png>]
 LaTeX Warning: File `../signature.jpg' not found on input line 21.
 
 
-/Users/cameronclark/Documents/UCT/EEE4113F/EEE4113F_Proj/Lit_Review_Resources/L
-it Review Latex/FrontMatter/Declaration.tex:21: Package pdftex.def Error: File 
-`../signature.jpg' not found: using draft setting.
+./FrontMatter/Declaration.tex:21: Package pdftex.def Error: File `../signature.
+jpg' not found: using draft setting.
 
 See the pdftex.def package documentation for explanation.
 Type  H <return>  for immediate help.
@@ -1258,8 +1252,7 @@ Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 )
-(/Users/cameronclark/Documents/UCT/EEE4113F/EEE4113F_Proj/Lit_Review_Resources/
-Lit Review Latex/FrontMatter/Acknowledgements.tex [2
+(./FrontMatter/Acknowledgements.tex [2
 
 ]
 LaTeX Font Info:    External font `lmex10' loaded for size
@@ -1268,11 +1261,10 @@ LaTeX Font Info:    External font `lmex10' loaded for size
 (Font)              <7> on input line 7.
 LaTeX Font Info:    External font `lmex10' loaded for size
 (Font)              <5> on input line 7.
-)
-(/Users/cameronclark/Documents/UCT/EEE4113F/EEE4113F_Proj/Lit_Review_Resources/
-Lit Review Latex/FrontMatter/Abstract.tex [3
+) (./FrontMatter/Abstract.tex [3
 
-]) [4
+])
+[4
 
 ]
 (/Users/cameronclark/Documents/UCT/EEE4113F/EEE4113F_Proj/Lit_Review_Resources/
@@ -1299,46 +1291,40 @@ n input line 19.
 [7
 
 
-]
-(/Users/cameronclark/Documents/UCT/EEE4113F/EEE4113F_Proj/Lit_Review_Resources/
-Lit Review Latex/Chapters/Introduction.tex
+] (./Chapters/Introduction.tex
 Chapter 1.
 [1
 
-])
-(/Users/cameronclark/Documents/UCT/EEE4113F/EEE4113F_Proj/Lit_Review_Resources/
-Lit Review Latex/Chapters/Literature.tex [2]
+]) (./Chapters/Literature.tex [2]
 Chapter 2.
-)
-(/Users/cameronclark/Documents/UCT/EEE4113F/EEE4113F_Proj/Lit_Review_Resources/
-Lit Review Latex/Chapters/Conclusions.tex [3
+) (./Chapters/Conclusions.tex [3
 
-]
+] [4]
 Chapter 3.
-)
-(/Users/cameronclark/Documents/UCT/EEE4113F/EEE4113F_Proj/Lit_Review_Resources/
-Lit Review Latex/Chapters/Recommendations.tex [4
+) (./Chapters/Recommendations.tex [5
 
 ]
 Chapter 4.
-) [5
+) [6
 
 ]
-No file Main.bbl.
+(/Users/cameronclark/Documents/UCT/EEE4113F/EEE4113F_Proj/Lit_Review_Resources/
+Lit Review Latex/Main.bbl) [7
 
+]
 (/Users/cameronclark/Documents/UCT/EEE4113F/EEE4113F_Proj/Lit_Review_Resources/
 Lit Review Latex/Main.aux)
 Package rerunfilecheck Info: File `Main.out' has not changed.
-(rerunfilecheck)             Checksum: 50287E2F43B33F14ABAEF1099D22825A;1355.
+(rerunfilecheck)             Checksum: 06B94ACD87E348CB90E1C72E5C8C5F59;3228.
  ) 
 Here is how much of TeX's memory you used:
- 30147 strings out of 478994
- 540233 string characters out of 5858184
- 1254754 words of memory out of 5000000
- 46854 multiletter control sequences out of 15000+600000
- 490589 words of font info for 152 fonts, out of 8000000 for 9000
+ 30198 strings out of 478994
+ 539036 string characters out of 5858184
+ 1256786 words of memory out of 5000000
+ 46883 multiletter control sequences out of 15000+600000
+ 495112 words of font info for 155 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 122i,11n,119p,1076b,964s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 122i,11n,119p,1072b,964s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/local/texlive/2021/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc}{/usr/local/
 texlive/2021/texmf-dist/fonts/enc/dvips/dejavu/dejavumono_t1-type1.enc}</usr/lo
 cal/texlive/2021/texmf-dist/fonts/type1/public/dejavu/DejaVuSansMono.pfb></usr/
@@ -1349,10 +1335,10 @@ onts/type1/public/lm/lmr12.pfb></usr/local/texlive/2021/texmf-dist/fonts/type1/
 public/lm/lmr17.pfb></usr/local/texlive/2021/texmf-dist/fonts/type1/public/lm/l
 mri10.pfb>
 Output written on "/Users/cameronclark/Documents/UCT/EEE4113F/EEE4113F_Proj/Lit
-_Review_Resources/Lit Review Latex/Main.pdf" (12 pages, 295984 bytes).
+_Review_Resources/Lit Review Latex/Main.pdf" (14 pages, 303025 bytes).
 PDF statistics:
- 163 PDF objects out of 1000 (max. 8388607)
- 138 compressed objects within 2 object streams
- 33 named destinations out of 1000 (max. 500000)
- 52830 words of extra memory for PDF output out of 61914 (max. 10000000)
+ 261 PDF objects out of 1000 (max. 8388607)
+ 233 compressed objects within 3 object streams
+ 52 named destinations out of 1000 (max. 500000)
+ 55006 words of extra memory for PDF output out of 61914 (max. 10000000)
 

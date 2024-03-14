@@ -1,16 +1,16 @@
 \documentclass[11pt]{report}
-\input{Style/ChapterStyle.tex}
+\input{Style/ChapterStyle}
 \usepackage{standalone} % Best loaded last in the preamble
 
-\input{FrontMatter/Glossary.tex}
+\input{FrontMatter/Glossary}
 
 \begin{document}
 
 \pagenumbering{roman}
-\input{FrontMatter/Title.tex}
-\input{FrontMatter/Declaration.tex}
-\input{FrontMatter/Acknowledgements.tex}
-\input{FrontMatter/Abstract.tex}
+\input{FrontMatter/Title}
+\input{FrontMatter/Declaration}
+\input{FrontMatter/Acknowledgements}
+\input{FrontMatter/Abstract}
 \glsresetall
 
 \tableofcontents
@@ -21,13 +21,13 @@
 
 \pagenumbering{arabic}
 
-\input{Chapters/Introduction.tex}
-\input{Chapters/Literature.tex}
-\input{Chapters/Conclusions.tex}
-\input{Chapters/Recommendations.tex}
+\input{Chapters/Introduction}
+\input{Chapters/Literature}
+\input{Chapters/Conclusions}
+\input{Chapters/Recommendations}
 
 \newpage
-\bibliography{Bibliography/References.bib}
+\bibliography{Bibliography/References}
 
 %\appendix
 %\input{Appendices/Appendix_1.tex}

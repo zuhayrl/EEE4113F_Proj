@@ -11,6 +11,8 @@ unaffected. He needs a way to reliably capture footage and monitor the temperatu
 # Microcontroller + Website
 
 # Camera footage capture
+Webcams for Bird Detection and Monitoring: A Demonstration Study
+https://www.mdpi.com/1424-8220/10/4/3480
 
 # Camera triggering
 

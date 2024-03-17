@@ -1,0 +1,41 @@
+% ----------------------------------------------------
+% Introduction
+% ----------------------------------------------------
+\documentclass[class=report,11pt,crop=false]{standalone}
+\input{../Style/ChapterStyle.tex}
+\input{../FrontMatter/Glossary.tex}
+\begin{document}
+% ----------------------------------------------------
+%\chapter{Introduction}
+%\epigraph{Philosophers have hitherto only interpreted the world in various ways; the point is to change it.}%
+%    {\emph{---Karl Marx}}
+%\vspace{0.5cm}
+% ----------------------------------------------------
+
+%\lipsum[1]
+
+%\section{Background}
+%\lipsum[1]
+
+\chapter{Problem Statement}
+Ben, a PHD student at the Fitz-Patrick Institute, is studying Southern Yellow-billed Hornbills and Fork-tailed Drongos in the Kalahari desert. He is trying to understand the decline in breeding success among Hornbills as temperatures rise, contrasting with the relatively stable breeding success of Drongos. He needs a dependable method to consistently capture footage of the Drongos throughout the day for behavioural analysis, as his current techniques lack reliability.
+
+%\section{Objectives}
+%\lipsum[1]
+
+%\section{System Requirements}
+%\lipsum[1]
+
+%\section{Scope \& Limitations}
+%\lipsum[1]
+
+%\section{Report Outline}
+%\lipsum[1]
+
+% ----------------------------------------------------
+\ifstandalone
+\bibliography{../Bibliography/References.bib}
+\printnoidxglossary[type=\acronymtype,nonumberlist]
+\fi
+\end{document}
+% ----------------------------------------------------

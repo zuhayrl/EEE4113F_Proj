@@ -1,0 +1,25 @@
+% ----------------------------------------------------
+% Conclusions
+% ----------------------------------------------------
+\documentclass[class=report,11pt,crop=false]{standalone}
+\input{../Style/ChapterStyle.tex}
+\input{../FrontMatter/Glossary.tex}
+\begin{document}
+% ----------------------------------------------------
+\chapter{Conclusions \label{ch:conclusions}}
+%\epigraph{The same rule holds for us now, of course: we choose our next world through what we learn in this one. Learn nothing, and the next world is the same as this one.}%
+%    {\emph{---Richard Bach, Jonathan Livingston Seagull}}
+%\vspace{0.5cm}
+% ----------------------------------------------------
+
+In conclusion, working in the Kalahari with skittish Fork-Tailed Drongos poses some new challenges but there are some solutions present in the literature. In terms of power, the higher UV index of South Africa \cite{SA_UV_Index} allows solar power to be a viable option paired with the preferred lithium-ion batteries. Microcontrollers in remote research are preferred to have a low power consumption and generally do not need to have high computing power, which makes the Arduino and ESP32 both advantageous in this situation. Both these microcontrollers also can support Bluetooth and Wi-Fi which can allow for easy data transfer from the devices without physical contact with the device. In terms of footage capture, short videos ($<30s$) are the most used for behavioural studies and \acrlong{IR} \acrshort{LEDs} would enable the footage to be captures in low light hours too. Using multiple triggering mechanisms ensures that the data captured is useful and accurate; while \acrshort{PIR} sensors are not as effective in regions where the local temperature is around the body temperature of the targets, other sensors like \acrshort{mmWave}, acoustic and \acrshort{IBD} have proved effective in multiple different ornithological studies. Finally, 
+capturing temperature data non-invasively of birds with no exposed skin is difficult with remote 
+\acrshort{IR} sensors; alternatively, surgical and gastro-intestinal devices provide accurate internal temperatures, but either need to be retrieved or require additional hardware to capture their data. 
+
+% ----------------------------------------------------
+\ifstandalone
+\bibliography{../Bibliography/References.bib}
+\printnoidxglossary[type=\acronymtype,nonumberlist]
+\fi
+\end{document}
+% ----------------------------------------------------

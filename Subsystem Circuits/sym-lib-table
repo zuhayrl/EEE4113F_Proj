@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "EEE4113F")(type "KiCad")(uri "${KIPRJMOD}/EEE4113F.kicad_sym")(options "")(descr ""))
+)

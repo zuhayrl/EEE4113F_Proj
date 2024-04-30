@@ -5,6 +5,8 @@
 
 const char* ssid = "TNCAPC197C1";
 const char* password = "953E33B8A6";
+//const char* ssid = "birdnet";
+//const char* password = "birdnet123";
 
 AsyncWebServer server(80);
 
@@ -32,21 +34,40 @@ void handleFileList(AsyncWebServerRequest *request) {
 void setup() {
   Serial.begin(115200);
 
-  // Connect to Wi-Fi
+  // Connect to Wi-Fi======================================================
+  
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.println("Connecting to WiFi...");
   }
   Serial.println("Connected to WiFi");
+  Serial.println(WiFi.localIP());
+  
 
-  // Start the web server
+  // Access Point =========================================================
+  /*
+  WiFi.softAP(ssid, password);
+  // Print ESP32 Local IP Address
+  IPAddress IP = WiFi.softAPIP();
+  Serial.print("AP IP address: ");
+  Serial.println(IP);
+  */
+
+  // Start the web server==================================================
   server.on("/files", HTTP_GET, handleFileList);
-
   server.begin();
   Serial.println("HTTP server started");
+
+  // Show connected devices================================================
+  
 }
 
 void loop() {
-  // Web server runs in the background
+//loop code
+  //Serial.printf("Stations connected = %d\n", WiFi.softAPgetStationNum());
+  //delay(3000);
+  
 }
+
+

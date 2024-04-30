@@ -1,5 +1,5 @@
 <?php
-$folderPath = 'tempfiles/';
+$folderPath = 'bin/';
 
 // Delete all files in the folder
 $files = glob($folderPath . '*');

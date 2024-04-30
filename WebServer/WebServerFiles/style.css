@@ -123,3 +123,13 @@ body {
     width: 60%;
   }
 }
+
+.download-button {
+  background-color: blue; /* Set button background color to blue */
+  color: white; /* Set text color to white */
+  padding: 10px 20px; /* Add padding to make the button bigger */
+  font-size: 16px; /* Increase font size for better visibility */
+  border: none; /* Remove default button border */
+  border-radius: 5px; /* Add border radius for a rounded look */
+  cursor: pointer; /* Change cursor to pointer on hover */
+}

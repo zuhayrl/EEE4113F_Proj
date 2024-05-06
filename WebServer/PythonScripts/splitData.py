@@ -23,4 +23,4 @@ with open(file_path, 'r') as file:
             with open(output_file_path, 'a') as output_file:
                 output_file.write(data_item + '\n')
 
-print("Data has been written to individual text files.")
+#print("Data has been written to individual text files.")

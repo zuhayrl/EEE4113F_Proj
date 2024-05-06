@@ -48,4 +48,4 @@ with open(output_file_path, 'w') as output_file:
                 output_file.write(input_file.read())
                 output_file.write('\n')
 
-print(f"All text files have been concatenated")
+#print(f"All text files have been concatenated")

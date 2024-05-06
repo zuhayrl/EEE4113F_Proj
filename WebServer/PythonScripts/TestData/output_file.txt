@@ -1,4 +1,7 @@
-1
-2
-3
-
+time, trigger, temp, humidity, light level, other data
+time, trigger, temp, humidity, light level, other data
+time, trigger, temp, humidity, light level, other data
+time, trigger, temp, humidity, light level, other data
+time, trigger, temp, humidity, light level, other data
+time, trigger, temp, humidity, light level, other data
+time, trigger, temp, humidity, light level, other data

@@ -6,10 +6,8 @@
 // #include "soc/rtc_cntl_reg.h"  // Disable brownour problems
 // #include "driver/rtc_io.h"
 #include <EEPROM.h>  // read and write from flash memory
-#include "appGlobals.h"
+// #include "appGlobals.h"
 
-// define the number of bytes to access
-#define EEPROM_SIZE 1
 
 // Pin definition for CAMERA_MODEL_AI_THINKER
 #define PWDN_GPIO_NUM 32
@@ -30,12 +28,20 @@
 #define HREF_GPIO_NUM 23
 #define PCLK_GPIO_NUM 22
 
-// Other pings
+// Other pins
 #define LED_PIN 33
+#define WAKE_PIN GPIO_NUM_0
 
-int pictureNumber = 0;
-uint8_t header[6] = { (uint8_t)'P', 3, 160, 120, 255 };
+// File handlers
+#define PICTURE_COUNT 50
 
+File dump_file;
+uint32_t picture_lengths[] = { 0 };
+uint8_t picture_lengths_index = 0;
+uint32_t picture_number = 0;
+String dump_path = "/dump_file.raw";
+
+//Parallel task handlers
 TaskHandle_t Camera_capture;
 TaskHandle_t SD_card_write;
 
@@ -46,39 +52,72 @@ bool fb_A_data_ready = false;
 bool fb_B_data_ready = false;
 bool capture = true;
 
-
 void setup() {
   pinMode(LED_PIN, OUTPUT);
 
   Serial.begin(115200);
-  Serial.println("Free SRAM (heap) size:");
-  Serial.println(ESP.getHeapSize());
+
   init_cam();
   init_SD_card();
 
-  xTaskCreatePinnedToCore(
-    capture_image,   /* Task function. */
-    "Capure Image",  /* name of task. */
-    4096,            /* Stack size of task */
-    NULL,            /* parameter of the task */
-    1,               /* priority of the task */
-    &Camera_capture, /* Task handle to keep track of created task */
-    1);              /* pin task to core 0 */
+  fs::FS &fs = SD_MMC;
+  dump_file = fs.open(dump_path.c_str(), FILE_WRITE);
 
-  xTaskCreatePinnedToCore(
-    store_image,    /* Task function. */
-    "Store Image",  /* name of task. */
-    4096,           /* Stack size of task */
-    NULL,           /* parameter of the task */
-    1,              /* priority of the task */
-    &SD_card_write, /* Task handle to keep track of created task */
-    0);             /* pin task to core 0 */
+  pinMode(WAKE_PIN, INPUT);
+  gpio_wakeup_enable(WAKE_PIN, GPIO_INTR_LOW_LEVEL);
+  esp_sleep_enable_gpio_wakeup();
 
-  delay(1000);
-  // Serial.println("Start with core " + String(xPortGetCoreID())); pictureNumber = 0;
-  // delay(2000);
-  capture = false;
-  delay(500);
+  // return;
+  camera_fb_t *fb;
+  for (int i = 0; i < 10; i++) {
+    fb = esp_camera_fb_get();
+    dump_file.write(fb->buf, fb->len);
+    picture_lengths[picture_lengths_index++] = fb->len;
+    esp_camera_fb_return(fb_A);
+    delay(500);
+  }
+
+  dump_file.close();
+  dump_file = fs.open(dump_path.c_str(), FILE_READ);
+  String path = "/picture" + String(picture_number) + ".jpg";
+  File img_file;
+  uint8_t buffer[picture_lengths[0]+100];
+  for (int i = 0; i < picture_lengths_index; i++) {
+    path = "/picture" + String(picture_number++) + ".jpg";
+    img_file = fs.open(path.c_str(), FILE_WRITE);
+    dump_file.read(buffer, picture_lengths[i]);
+    img_file.write(buffer, picture_lengths[i]);
+    img_file.close();
+  }
+
+  dump_file.close();
+  dump_file = fs.open(dump_path, FILE_WRITE);
+  dump_file.seek(0);
+  picture_lengths_index = 0;
+
+  // xTaskCreatePinnedToCore(
+  //   capture_image,   /* Task function. */
+  //   "Capure Image",  /* name of task. */
+  //   4096,            /* Stack size of task */
+  //   NULL,            /* parameter of the task */
+  //   1,               /* priority of the task */
+  //   &Camera_capture, /* Task handle to keep track of created task */
+  //   1);              /* pin task to core 0 */
+
+  // xTaskCreatePinnedToCore(
+  //   store_image,    /* Task function. */
+  //   "Store Image",  /* name of task. */
+  //   4096,           /* Stack size of task */
+  //   NULL,           /* parameter of the task */
+  //   1,              /* priority of the task */
+  //   &SD_card_write, /* Task handle to keep track of created task */
+  //   0);             /* pin task to core 0 */
+
+  // delay(1000);
+  // // Serial.println("Start with core " + String(xPortGetCoreID())); picture_number = 0;
+  // // delay(2000);
+  // capture = false;
+  // delay(500);
 }
 
 void init_cam() {
@@ -105,7 +144,6 @@ void init_cam() {
   config.pixel_format = PIXFORMAT_JPEG;
 
   if (psramFound()) {
-    Serial.println("PSRAM was Found");
     config.frame_size = FRAMESIZE_QVGA;  // FRAMESIZE_ + QVGA|CIF|VGA|SVGA|XGA|SXGA|UXGA
     config.jpeg_quality = 63;
     config.fb_count = 2;
@@ -152,7 +190,7 @@ void capture_image(void *pvParameters) {
       fb_A = esp_camera_fb_get();
       fb_A_data_ready = true;
       // esp_camera_fb_return(fb_A);
-      // Serial.print(String(pictureNumber++));
+      // Serial.print(String(picture_number++));
     } else if (!fb_B_data_ready) {
       fb_B = esp_camera_fb_get();
       fb_B_data_ready = true;
@@ -164,7 +202,7 @@ void capture_image(void *pvParameters) {
 void store_image(void *pvParameters) {
   while (capture) {
     if (fb_A_data_ready) {
-      String path = "/picture" + String(pictureNumber) + ".jpg";
+      String path = "/picture" + String(picture_number) + ".jpg";
 
       fs::FS &fs = SD_MMC;
       Serial.printf("Picture file name: %s\n", path.c_str());
@@ -177,10 +215,10 @@ void store_image(void *pvParameters) {
       esp_camera_fb_return(fb_A);
 
       fb_A_data_ready = false;
-      pictureNumber++;
+      picture_number++;
       capture = false;
     } else if (fb_B_data_ready) {
-      String path = "/picture" + String(pictureNumber) + ".jpg";
+      String path = "/picture" + String(picture_number) + ".jpg";
 
       fs::FS &fs = SD_MMC;
       Serial.printf("Picture file name: %s\n", path.c_str());
@@ -192,13 +230,22 @@ void store_image(void *pvParameters) {
 
       esp_camera_fb_return(fb_B);
       fb_B_data_ready = false;
-      pictureNumber++;
+      picture_number++;
     }
   }
   vTaskDelete(NULL);
 }
 
 void loop() {
-  prepRecording(); 
-  checkMemory();
+
+  // fs::FS &fs = SD_MMC;
+  // open at least 100 files
+  // sleep
+  Serial.println("Starting Sleep");
+  delay(1000);
+  esp_err_t e = esp_light_sleep_start();
+  Serial.printf("Waking with %x\n", e);
+  // on wake: GPIO or UART wake
+  // uart wake: take pics and save for 10-20s
+  // gpio wake: start server and wake pi.
 }

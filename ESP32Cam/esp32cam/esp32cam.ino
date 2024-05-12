@@ -1,12 +1,17 @@
 #include "esp_camera.h"
 #include "Arduino.h"
+#include "esp_sleep.h"
 #include "FS.h"      // SD Card ESP32
 #include "SD_MMC.h"  // SD Card ESP32
 // #include "soc/soc.h"           // Disable brownour problems
 // #include "soc/rtc_cntl_reg.h"  // Disable brownour problems
 // #include "driver/rtc_io.h"
 #include <EEPROM.h>  // read and write from flash memory
-// #include "appGlobals.h"
+#include "SoftwareSerial.h"
+#include "HardwareSerial.h"
+#include <WiFi.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
 
 
 // Pin definition for CAMERA_MODEL_AI_THINKER
@@ -30,94 +35,51 @@
 
 // Other pins
 #define LED_PIN 33
-#define WAKE_PIN GPIO_NUM_0
+#define IR_LAMP_PIN (gpio_num_t)16
+#define RF_LINK_PIN (gpio_num_t)1
+
+//Coms
+const char *ssid = "TNCAPC197C1";
+const char *password = "953E33B8A6";
+AsyncWebServer server(80);
+
+unsigned long lastWakeUpTime = 0;
 
 // File handlers
-#define PICTURE_COUNT 50
-
-File dump_file;
-uint32_t picture_lengths[] = { 0 };
-uint8_t picture_lengths_index = 0;
 uint32_t picture_number = 0;
-String dump_path = "/dump_file.raw";
+String txt_path = "/data.txt";
+String txt_new_line = "";
+File txt_file;
 
 //Parallel task handlers
 TaskHandle_t Camera_capture;
 TaskHandle_t SD_card_write;
 
-camera_fb_t *fb_A = NULL;
-camera_fb_t *fb_B = NULL;
+camera_fb_t *fb_A;
+camera_fb_t *fb_B;
 
 bool fb_A_data_ready = false;
 bool fb_B_data_ready = false;
 bool capture = true;
 
 void setup() {
-  pinMode(LED_PIN, OUTPUT);
-
   Serial.begin(115200);
 
-  init_cam();
-  init_SD_card();
-
+  // create txt file
   fs::FS &fs = SD_MMC;
-  dump_file = fs.open(dump_path.c_str(), FILE_WRITE);
+  txt_file = fs.open(txt_path.c_str(), FILE_WRITE);
+  txt_file.close();
 
-  pinMode(WAKE_PIN, INPUT);
-  gpio_wakeup_enable(WAKE_PIN, GPIO_INTR_LOW_LEVEL);
-  esp_sleep_enable_gpio_wakeup();
+  //wakes
+  pinMode(RF_LINK_PIN, INPUT);
+  gpio_wakeup_enable(RF_LINK_PIN, GPIO_INTR_HIGH_LEVEL);
+  esp_sleep_enable_gpio_wakeup();  //wake from user
+  // uart_set_wakeup_threshold(0, 1);
+  esp_sleep_enable_uart_wakeup(0);  //wake from sensor
 
-  // return;
-  camera_fb_t *fb;
-  for (int i = 0; i < 10; i++) {
-    fb = esp_camera_fb_get();
-    dump_file.write(fb->buf, fb->len);
-    picture_lengths[picture_lengths_index++] = fb->len;
-    esp_camera_fb_return(fb_A);
-    delay(500);
-  }
-
-  dump_file.close();
-  dump_file = fs.open(dump_path.c_str(), FILE_READ);
-  String path = "/picture" + String(picture_number) + ".jpg";
-  File img_file;
-  uint8_t buffer[picture_lengths[0]+100];
-  for (int i = 0; i < picture_lengths_index; i++) {
-    path = "/picture" + String(picture_number++) + ".jpg";
-    img_file = fs.open(path.c_str(), FILE_WRITE);
-    dump_file.read(buffer, picture_lengths[i]);
-    img_file.write(buffer, picture_lengths[i]);
-    img_file.close();
-  }
-
-  dump_file.close();
-  dump_file = fs.open(dump_path, FILE_WRITE);
-  dump_file.seek(0);
-  picture_lengths_index = 0;
-
-  // xTaskCreatePinnedToCore(
-  //   capture_image,   /* Task function. */
-  //   "Capure Image",  /* name of task. */
-  //   4096,            /* Stack size of task */
-  //   NULL,            /* parameter of the task */
-  //   1,               /* priority of the task */
-  //   &Camera_capture, /* Task handle to keep track of created task */
-  //   1);              /* pin task to core 0 */
-
-  // xTaskCreatePinnedToCore(
-  //   store_image,    /* Task function. */
-  //   "Store Image",  /* name of task. */
-  //   4096,           /* Stack size of task */
-  //   NULL,           /* parameter of the task */
-  //   1,              /* priority of the task */
-  //   &SD_card_write, /* Task handle to keep track of created task */
-  //   0);             /* pin task to core 0 */
-
-  // delay(1000);
-  // // Serial.println("Start with core " + String(xPortGetCoreID())); picture_number = 0;
-  // // delay(2000);
-  // capture = false;
-  // delay(500);
+  //IR lamp
+  pinMode(IR_LAMP_PIN, OUTPUT);
+  digitalWrite(IR_LAMP_PIN, LOW);  //turn off
 }
 
 void init_cam() {
@@ -159,72 +121,69 @@ void init_cam() {
   esp_err_t err = esp_camera_init(&config);
   if (err != ESP_OK) {
     Serial.printf("Camera init failed with error 0x%x", err);
-    return;
+    while (true) {}
   }
-
-  // Turn Off Flash
-  // pinMode(FLASH_GPIO_NUM, OUTPUT);
-  // ledcSetup(ledChannel, freq, 8);
-  // ledcAttachPin(FLASH_GPIO_NUM, ledChannel);
-  // ledcWrite(ledChannel, 0);
+  Serial.println("Camera Started");
 }
 
 void init_SD_card() {
-  Serial.println("Starting SD Card");
+  // Serial.println("Starting SD Card");
   if (!SD_MMC.begin()) {
     Serial.println("SD Card Mount Failed");
-    return;
+    while (true) {}
   }
 
   uint8_t cardType = SD_MMC.cardType();
   if (cardType == CARD_NONE) {
     Serial.println("No SD Card attached");
-    return;
+    while (true) {}
   }
   Serial.println("SD Card Started");
 }
 
 void capture_image(void *pvParameters) {
+  init_cam();
   while (capture) {
     if (!fb_A_data_ready) {
       fb_A = esp_camera_fb_get();
       fb_A_data_ready = true;
-      // esp_camera_fb_return(fb_A);
-      // Serial.print(String(picture_number++));
     } else if (!fb_B_data_ready) {
       fb_B = esp_camera_fb_get();
       fb_B_data_ready = true;
     }
   }
+  esp_camera_deinit();
   vTaskDelete(NULL);
 }
 
 void store_image(void *pvParameters) {
+  init_SD_card();
   while (capture) {
     if (fb_A_data_ready) {
-      String path = "/picture" + String(picture_number) + ".jpg";
+      String path = "/" + String(picture_number) + ".jpg";
 
       fs::FS &fs = SD_MMC;
-      Serial.printf("Picture file name: %s\n", path.c_str());
+      // Serial.printf("Picture file name: %s\n", path.c_str());
 
       File file = fs.open(path.c_str(), FILE_WRITE);
-      // file.write(header, 5);
+      // Serial.println("Opened");
       file.write(fb_A->buf, fb_A->len);
+      // Serial.println("Written");
       file.close();
+      // Serial.println("Closed");
 
       esp_camera_fb_return(fb_A);
+      // Serial.println("Ret.");
 
       fb_A_data_ready = false;
       picture_number++;
-      capture = false;
     } else if (fb_B_data_ready) {
-      String path = "/picture" + String(picture_number) + ".jpg";
+      String path = "/" + String(picture_number) + ".jpg";
 
       fs::FS &fs = SD_MMC;
-      Serial.printf("Picture file name: %s\n", path.c_str());
+      // Serial.printf("Picture file name: %s\n", path.c_str());
 
       File file = fs.open(path.c_str(), FILE_WRITE);
-      // file.write(header, 5);
       file.write(fb_B->buf, fb_B->len);
       file.close();
 
@@ -233,19 +192,173 @@ void store_image(void *pvParameters) {
       picture_number++;
     }
   }
+  SD_MMC.end();
   vTaskDelete(NULL);
 }
 
-void loop() {
+void start_video(uint32_t time_s) {
 
-  // fs::FS &fs = SD_MMC;
-  // open at least 100 files
+  uint32_t picture_number_start = picture_number;
+  capture = true;
+
+  xTaskCreatePinnedToCore(
+    capture_image,   /* Task function. */
+    "Capure Image",  /* name of task. */
+    4096,            /* Stack size of task */
+    NULL,            /* parameter of the task */
+    1,               /* priority of the task */
+    &Camera_capture, /* Task handle to keep track of created task */
+    1);              /* pin task to core 0 */
+
+  xTaskCreatePinnedToCore(
+    store_image,    /* Task function. */
+    "Store Image",  /* name of task. */
+    4096,           /* Stack size of task */
+    NULL,           /* parameter of the task */
+    1,              /* priority of the task */
+    &SD_card_write, /* Task handle to keep track of created task */
+    0);             /* pin task to core 0 */
+
+  delay(time_s * 1000);
+  capture = false;
+  while ((eTaskGetState(SD_card_write) == eRunning) || (eTaskGetState(Camera_capture) == eRunning)) {}  //wait for tasks to finish.
+  Serial.println("Writen from " + String(picture_number_start) + " to " + String(picture_number));
+}
+
+uint8_t fetch_data(void) {
+  uint8_t buf[15] = { 0 };
+  Serial.readBytes(buf, 15);
+  if (buf[10] == 0) return 2;
+
+  uint8_t date, hours, minutes, seconds;
+  float temperature, humidity;
+  uint16_t lux;
+  uint8_t triggers;
+
+  date = buf[14];
+  hours = buf[13];
+  minutes = buf[12];
+  seconds = buf[11];
+
+  triggers = buf[10];
+
+  u_int8_t new_temp_buf[4];
+  new_temp_buf[0] = buf[9];
+  new_temp_buf[1] = buf[8];
+  new_temp_buf[2] = buf[7];
+  new_temp_buf[3] = buf[6];
+  temperature = (float)*((float *)new_temp_buf);
+
+  u_int8_t new_hum_buf[4];
+  new_hum_buf[0] = buf[5];
+  new_hum_buf[1] = buf[4];
+  new_hum_buf[2] = buf[3];
+  new_hum_buf[3] = buf[2];
+  humidity = (float)*((float *)new_hum_buf);
+
+  lux = (buf[1] << 8) | buf[0];
+
+  //Days, Hours:Minutes:Seconds, Trigger, Temp, Hum, Lux, PicStart, PicEnd
+  txt_new_line = String(date) + "," + String(hours) + ":" + String(minutes) + ":" + String(seconds) + "," + String(triggers) + "," + String(temperature) + "," + String(humidity) + "," + String(lux);
+  return (lux > 100);
+}
+
+void update_txt(uint32_t picture_number_start) {
+  String new_line = txt_new_line + "," + String(picture_number_start) + "," + String(picture_number);
+  fs::FS &fs = SD_MMC;
+  txt_file = fs.open(txt_path.c_str(), FILE_APPEND);
+  txt_file.println(new_line);
+  txt_file.close();
+}
+
+void host_server(void) {
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.println("Connecting to WiFi...");
+  }
+  Serial.println("Connected to WiFi");
+  Serial.println(WiFi.localIP());
+
+  server.on("/files", HTTP_GET, handleFileList);
+  server.begin();
+  Serial.println("HTTP server started");
+}
+
+void handleFileList(AsyncWebServerRequest *request) {
+  if (!SD_MMC.begin()) {
+    Serial.println("Error initializing SD card");
+    request->send(500, "text/plain", "Error initializing SD card");
+    return;
+  }
+
+  String fileList = "";
+  File root = SD_MMC.open("/");
+  File file = root.openNextFile();
+  while (file) {
+    if (!file.isDirectory()) {
+      fileList += file.name();
+      fileList += "\n";
+    }
+    file = root.openNextFile();
+  }
+
+  request->send(200, "text/plain", fileList);
+}
+
+void clean_files(void) {
+  init_SD_card();
+  SD_MMC.remove(txt_path);
+  String path;
+  for (uint32_t i = 0; i < picture_number; i++) {
+    path = "/" + String(picture_number) + ".jpg";
+    SD_MMC.remove(path);
+  }
+  picture_number = 0;
+  SD_MMC.end();
+}
+
+void loop() {
   // sleep
-  Serial.println("Starting Sleep");
   delay(1000);
-  esp_err_t e = esp_light_sleep_start();
-  Serial.printf("Waking with %x\n", e);
-  // on wake: GPIO or UART wake
-  // uart wake: take pics and save for 10-20s
-  // gpio wake: start server and wake pi.
+  esp_light_sleep_start();
+  esp_sleep_wakeup_cause_t wake_cause = esp_sleep_get_wakeup_cause();
+  Serial.println("Waking with cause " + String(wake_cause));
+
+  // wake_cause = (esp_sleep_wakeup_cause_t) 0;
+  if (wake_cause == ESP_SLEEP_WAKEUP_UART) {
+    //uart wake
+    uint8_t ret = fetch_data();
+    if (ret != 2) {
+      if (ret = 1) {
+        //turn on IR lamp
+        digitalWrite(IR_LAMP_PIN, HIGH);
+      }
+      uint32_t picture_number_start = picture_number;
+      start_video(15);
+      digitalWrite(IR_LAMP_PIN, LOW);
+      update_txt(picture_number_start);
+    }
+  } else if (wake_cause == ESP_SLEEP_WAKEUP_GPIO) {
+    // gpio wake: start server.
+    host_server();
+    delay(15 * 60 * 1000);  //open server for 15 min
+    WiFi.disconnect(true);
+  }
+
+  if (millis() - lastWakeUpTime >= 24L * 60L * 60L * 1000L) {
+    //if 24 hours has elapsed, wake the pi and send data.
+    lastWakeUpTime = millis();
+    esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_GPIO);
+    pinMode(RF_LINK_PIN, OUTPUT);
+    digitalWrite(RF_LINK_PIN, HIGH);
+    delay(1000);
+    digitalWrite(RF_LINK_PIN, LOW);
+    host_server();
+    pinMode(RF_LINK_PIN, INPUT);
+    esp_sleep_enable_gpio_wakeup();
+    delay(5 * 60 * 1000);  //open server for 5 min
+    WiFi.disconnect(true);
+    clean_files();
+  }
 }

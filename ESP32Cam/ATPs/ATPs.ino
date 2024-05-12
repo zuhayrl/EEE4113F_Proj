@@ -12,7 +12,7 @@
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-
+#include "ESP32_OV5640_AF.h"
 
 // Pin definition for CAMERA_MODEL_AI_THINKER
 #define PWDN_GPIO_NUM 32
@@ -64,23 +64,35 @@ bool capture = true;
 
 void setup() {
   Serial.begin(115200);
+  init_cam();
+  init_SD_card();
 
-  // create txt file
-  fs::FS &fs = SD_MMC;
-  txt_file = fs.open(txt_path.c_str(), FILE_WRITE);
-  txt_file.close();
+  OV5640 ov5640 = OV5640();
+  sensor_t *sensor = esp_camera_sensor_get();
+  ov5640.start(sensor);
 
-  //wakes
-  pinMode(RF_LINK_PIN, INPUT);
-  gpio_wakeup_enable(RF_LINK_PIN, GPIO_INTR_HIGH_LEVEL);
-  esp_sleep_enable_gpio_wakeup();  //wake from user
-  // uart_set_wakeup_threshold(0, 1);
-  esp_sleep_enable_uart_wakeup(0);  //wake from sensor
+  if (ov5640.focusInit() == 0) {
+    Serial.println("OV5640_Focus_Init Successful!");
+  }
 
-  //IR lamp
-  pinMode(IR_LAMP_PIN, OUTPUT);
-  digitalWrite(IR_LAMP_PIN, LOW);  //turn off
+  // Set Continuous AF MODE
+  if (ov5640.autoFocusMode() == 0) {
+    Serial.println("OV5640_Auto_Focus Successful!");
+  }
+
+  camera_fb_t *fb;
+  for (int i = 0; i < 10; i++) {
+    fb = esp_camera_fb_get();
+    String path = "/high" + String(i) + ".jpg";
+    fs::FS &fs = SD_MMC;
+    File file = fs.open(path.c_str(), FILE_WRITE);
+    file.write(fb->buf, fb->len);
+    file.close();
+    esp_camera_fb_return(fb);
+    Serial.println("Picture " + String(i) + " written");
+  }
 }
+
 
 void init_cam() {
   camera_config_t config;
@@ -106,9 +118,9 @@ void init_cam() {
   config.pixel_format = PIXFORMAT_JPEG;
 
   if (psramFound()) {
-    config.frame_size = FRAMESIZE_QVGA;  // FRAMESIZE_ + QVGA|CIF|VGA|SVGA|XGA|SXGA|UXGA
-    config.jpeg_quality = 63;
-    config.fb_count = 2;
+    config.frame_size = FRAMESIZE_HD;  // FRAMESIZE_ + QVGA|CIF|VGA|SVGA|XGA|SXGA|UXGA
+    config.jpeg_quality = 10;
+    config.fb_count = 1;
   } else {
     Serial.println("PSRAM was not Found");
     while (true) {}  //error handler
@@ -219,146 +231,13 @@ void start_video(uint32_t time_s) {
     &SD_card_write, /* Task handle to keep track of created task */
     0);             /* pin task to core 0 */
 
+  return;
   delay(time_s * 1000);
   capture = false;
   while ((eTaskGetState(SD_card_write) == eRunning) || (eTaskGetState(Camera_capture) == eRunning)) {}  //wait for tasks to finish.
   Serial.println("Writen from " + String(picture_number_start) + " to " + String(picture_number));
 }
 
-uint8_t fetch_data(void) {
-  uint8_t buf[15] = { 0 };
-  Serial.readBytes(buf, 15);
-  if (buf[10] == 0) return 2;
-
-  uint8_t date, hours, minutes, seconds;
-  float temperature, humidity;
-  uint16_t lux;
-  uint8_t triggers;
-
-  date = buf[14];
-  hours = buf[13];
-  minutes = buf[12];
-  seconds = buf[11];
-
-  triggers = buf[10];
-
-  u_int8_t new_temp_buf[4];
-  new_temp_buf[0] = buf[9];
-  new_temp_buf[1] = buf[8];
-  new_temp_buf[2] = buf[7];
-  new_temp_buf[3] = buf[6];
-  temperature = (float)*((float *)new_temp_buf);
-
-  u_int8_t new_hum_buf[4];
-  new_hum_buf[0] = buf[5];
-  new_hum_buf[1] = buf[4];
-  new_hum_buf[2] = buf[3];
-  new_hum_buf[3] = buf[2];
-  humidity = (float)*((float *)new_hum_buf);
-
-  lux = (buf[1] << 8) | buf[0];
-
-  //Days, Hours:Minutes:Seconds, Trigger, Temp, Hum, Lux, PicStart, PicEnd
-  txt_new_line = String(date) + "," + String(hours) + ":" + String(minutes) + ":" + String(seconds) + "," + String(triggers) + "," + String(temperature) + "," + String(humidity) + "," + String(lux);
-  return (lux > 100);
-}
-
-void update_txt(uint32_t picture_number_start) {
-  String new_line = txt_new_line + "," + String(picture_number_start) + "," + String(picture_number);
-  fs::FS &fs = SD_MMC;
-  txt_file = fs.open(txt_path.c_str(), FILE_APPEND);
-  txt_file.println(new_line);
-  txt_file.close();
-}
-
-void host_server(void) {
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.println("Connecting to WiFi...");
-  }
-  Serial.println("Connected to WiFi");
-  Serial.println(WiFi.localIP());
-
-  server.on("/files", HTTP_GET, handleFileList);
-  server.begin();
-  Serial.println("HTTP server started");
-}
-
-void handleFileList(AsyncWebServerRequest *request) {
-  if (!SD_MMC.begin()) {
-    Serial.println("Error initializing SD card");
-    request->send(500, "text/plain", "Error initializing SD card");
-    return;
-  }
-
-  String fileList = "";
-  File root = SD_MMC.open("/");
-  File file = root.openNextFile();
-  while (file) {
-    if (!file.isDirectory()) {
-      fileList += file.name();
-      fileList += "\n";
-    }
-    file = root.openNextFile();
-  }
-
-  request->send(200, "text/plain", fileList);
-}
-
-void clean_files(void) {
-  init_SD_card();
-  SD_MMC.remove(txt_path);
-  String path;
-  for (uint32_t i = 0; i < picture_number; i++) {
-    path = "/" + String(picture_number) + ".jpg";
-    SD_MMC.remove(path);
-  }
-  picture_number = 0;
-  SD_MMC.end();
-}
-
 void loop() {
-  // sleep
-  delay(1000);
-  esp_light_sleep_start();
-  esp_sleep_wakeup_cause_t wake_cause = esp_sleep_get_wakeup_cause();
-  Serial.println("Waking with cause " + String(wake_cause));
-
-  // wake_cause = (esp_sleep_wakeup_cause_t) 0;
-  if (wake_cause == ESP_SLEEP_WAKEUP_UART) {
-    //uart wake
-    uint8_t ret = fetch_data();
-    if (ret != 2) {
-      if (ret = 1) {
-        //turn on IR lamp
-        digitalWrite(IR_LAMP_PIN, HIGH);
-      }
-      uint32_t picture_number_start = picture_number;
-      start_video(15);
-      digitalWrite(IR_LAMP_PIN, LOW);
-      update_txt(picture_number_start);
-    }
-  } else if (wake_cause == ESP_SLEEP_WAKEUP_GPIO) {
-    // gpio wake: start server.
-    host_server();
-    delay(15 * 60 * 1000);  //open server for 15 min
-    WiFi.disconnect(true);
-  }
-
-  if (millis() - lastWakeUpTime >= 24L * 60L * 60L * 1000L) {
-    //if 24 hours has elapsed, wake the pi and send data.
-    lastWakeUpTime = millis();
-    esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_GPIO);
-    pinMode(RF_LINK_PIN, OUTPUT);
-    digitalWrite(RF_LINK_PIN, HIGH);
-    delay(1000);
-    digitalWrite(RF_LINK_PIN, LOW);
-    host_server();
-    pinMode(RF_LINK_PIN, INPUT);
-    esp_sleep_enable_gpio_wakeup();
-    delay(5 * 60 * 1000);  //open server for 5 min
-    WiFi.disconnect(true);
-    clean_files();
-  }
+  // put your main code here, to run repeatedly:
 }

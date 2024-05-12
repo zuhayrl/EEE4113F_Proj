@@ -1,3 +1,5 @@
+import os
+
 # Path to the text file containing the data formatted with commas
 file_path = 'C:\\Users\\zuhay\\OneDrive\\University\\ForthYear\\Sem1\\EEE4113F\\Github\\EEE4113F_Proj\\WebServer\\PythonScripts\\TestData\\output_file.txt'
 
@@ -5,7 +7,7 @@ file_path = 'C:\\Users\\zuhay\\OneDrive\\University\\ForthYear\\Sem1\\EEE4113F\\
 folder_path = 'C:\\Users\\zuhay\\OneDrive\\University\\ForthYear\\Sem1\\EEE4113F\\Github\\EEE4113F_Proj\\WebServer\\PythonScripts\\TestData\\'
 
 # File paths for each data type
-file_paths = ['time.txt', 'trigger.txt', 'temp.txt', 'humidity.txt', 'light.txt', 'other.txt']
+file_paths = ['time.txt', 'trigger.txt', 'temp.txt', 'humidity.txt', 'light.txt']
 
 # Read the content of the text file
 with open(file_path, 'r') as file:
@@ -24,3 +26,7 @@ with open(file_path, 'r') as file:
                 output_file.write(data_item + '\n')
 
 #print("Data has been written to individual text files.")
+
+#delete output file
+#if os.path.exists(file_path):
+#  os.remove(file_path)

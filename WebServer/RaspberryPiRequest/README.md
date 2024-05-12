@@ -1,1 +1,0 @@
-remember to make esp32 an access point

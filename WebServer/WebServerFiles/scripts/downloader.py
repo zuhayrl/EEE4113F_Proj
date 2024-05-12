@@ -1,7 +1,7 @@
 import requests
 import os
 
-esp32_ip = "192.168.1.211"
+esp32_ip = "192.168.4.1"
 
 # Get file list
 response = requests.get("http://" + esp32_ip + "/files")

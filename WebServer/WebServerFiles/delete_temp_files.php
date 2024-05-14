@@ -1,5 +1,5 @@
 <?php
-$folderPath = 'bin/';
+$folderPath = 'stats/';
 
 // Delete all files in the folder
 $files = glob($folderPath . '*');

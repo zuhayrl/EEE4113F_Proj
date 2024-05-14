@@ -1,7 +1,7 @@
 import os
 
 def split_data(input_file, output_dir):
-    data_types = ["number", "temperature", "humidity", "light_level"]
+    data_types = ["trigger", "temperature", "humidity", "light_level"]
     data_files = {data_type: open(os.path.join(output_dir, f"{data_type}.txt"), "a") for data_type in data_types}
     
     with open(input_file, "r") as file:
@@ -15,6 +15,6 @@ def split_data(input_file, output_dir):
     for file in data_files.values():
         file.close()
 
-input_file = "C:\\Users\\zuhay\\OneDrive\\University\\ForthYear\\Sem1\\EEE4113F\\Github\\EEE4113F_Proj\\WebServer\\PythonScripts\\TestData\\output_file.txt"  # Replace with your input file name
-output_directory = "C:\\Users\\zuhay\\OneDrive\\University\\ForthYear\\Sem1\\EEE4113F\\Github\\EEE4113F_Proj\\WebServer\\PythonScripts\\TestData"  # Replace with your desired output directory
+input_file = "textfiles/esp_data.txt"
+output_directory = "stats"
 split_data(input_file, output_directory)

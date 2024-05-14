@@ -21,18 +21,29 @@
         <canvas id="temperatureChart"></canvas>
         <script>
             // Read temperature data from the file
-            fetch('files/temperature.txt')
+            fetch('stats/temperature.txt')
                 .then(response => response.text()) 
                 .then(data => {
-                    // Split the data into an array of temperatures
-                    const temperatures = data.trim().split('\n').map(Number);
+                    // Split the data into an array of lines
+                    const lines = data.trim().split('\n');
+                    // Extract the last 30 lines or all lines if less than 30
+                    const lastLines = lines.slice(-30);
+
+                    // Extract temperatures from the second column of the lines
+                    const temperatures = lastLines.map(line => {
+                        const columns = line.split(', ');
+                        return parseFloat(columns[1]); // Assuming temperature is in the second column
+                    });
+
+                    // Create labels for the chart
+                    const labels = Array.from({length: Math.min(30, lines.length)}, (_, i) => 'Day ' + (i + 1));
 
                     // Create the bar graph
                     const ctx = document.getElementById('temperatureChart').getContext('2d');
                     new Chart(ctx, {
                         type: 'bar',
                         data: {
-                            labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'],
+                            labels: labels,
                             datasets: [{
                                 label: 'Average Temperature',
                                 data: temperatures,
